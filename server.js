@@ -1,5 +1,4 @@
 const express = require('express');
-const https = require('https');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
@@ -7,32 +6,8 @@ const fs = require('fs').promises;
 
 const app = express();
 
-// SSL Configuration
-let server;
-const isDevelopment = process.env.NODE_ENV !== 'production';
-
-if (isDevelopment) {
-    // Development: HTTP server
-    server = http.createServer(app);
-} else {
-    // Production: HTTPS server with Let's Encrypt certificates
-    try {
-        const privateKey = require('fs').readFileSync('/opt/bitnami/letsencrypt/certificates/yourdomain.com.key', 'utf8');
-        const certificate = require('fs').readFileSync('/opt/bitnami/letsencrypt/certificates/yourdomain.com.crt', 'utf8');
-        const ca = require('fs').readFileSync('/opt/bitnami/letsencrypt/certificates/yourdomain.com.ca-bundle', 'utf8');
-
-        const credentials = {
-            key: privateKey,
-            cert: certificate,
-            ca: ca
-        };
-
-        server = https.createServer(credentials, app);
-    } catch (error) {
-        console.log('SSL certificates not found, falling back to HTTP');
-        server = http.createServer(app);
-    }
-}
+// Create HTTP server (Cloudflare handles SSL)
+const server = http.createServer(app);
 
 const io = socketIo(server, {
     cors: {
@@ -41,7 +16,7 @@ const io = socketIo(server, {
     }
 });
 
-const port = process.env.PORT || (isDevelopment ? 3000 : 443);
+const port = process.env.PORT || 80;
 const dataFilePath = path.join(__dirname, 'data.json');
 console.log('Data file path:', dataFilePath);
 
@@ -226,6 +201,6 @@ io.on('connection', (socket) => {
 loadData().then(() => {
     server.listen(port, () => {
         console.log(`Soldier Showdown Admin server listening on port ${port}`);
-        console.log(`Environment: ${isDevelopment ? 'Development' : 'Production'}`);
+        console.log(`Using Cloudflare for SSL termination`);
     });
 });
