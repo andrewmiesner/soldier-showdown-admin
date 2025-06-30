@@ -1,14 +1,47 @@
 const express = require('express');
 const https = require('https');
+const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const fs = require('fs').promises;
 
 const app = express();
-const server = https.createServer(app);
-const io = socketIo(server);
 
-const port = 443;
+// SSL Configuration
+let server;
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+if (isDevelopment) {
+    // Development: HTTP server
+    server = http.createServer(app);
+} else {
+    // Production: HTTPS server with Let's Encrypt certificates
+    try {
+        const privateKey = require('fs').readFileSync('/opt/bitnami/letsencrypt/certificates/yourdomain.com.key', 'utf8');
+        const certificate = require('fs').readFileSync('/opt/bitnami/letsencrypt/certificates/yourdomain.com.crt', 'utf8');
+        const ca = require('fs').readFileSync('/opt/bitnami/letsencrypt/certificates/yourdomain.com.ca-bundle', 'utf8');
+
+        const credentials = {
+            key: privateKey,
+            cert: certificate,
+            ca: ca
+        };
+
+        server = https.createServer(credentials, app);
+    } catch (error) {
+        console.log('SSL certificates not found, falling back to HTTP');
+        server = http.createServer(app);
+    }
+}
+
+const io = socketIo(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
+const port = process.env.PORT || (isDevelopment ? 3000 : 443);
 const dataFilePath = path.join(__dirname, 'data.json');
 console.log('Data file path:', dataFilePath);
 
@@ -192,6 +225,7 @@ io.on('connection', (socket) => {
 // Load data before starting the server
 loadData().then(() => {
     server.listen(port, () => {
-        log(`Soldier Showdown Admin server listening at http://localhost:${port}`);
+        console.log(`Soldier Showdown Admin server listening on port ${port}`);
+        console.log(`Environment: ${isDevelopment ? 'Development' : 'Production'}`);
     });
 });
