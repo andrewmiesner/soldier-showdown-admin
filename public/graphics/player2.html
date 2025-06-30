@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player 2</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link href="/css/tailwind.css" rel="stylesheet">
+  <style>
+    body { 
+      margin: 0; 
+      padding: 0; 
+      overflow: hidden; 
+      background-color: transparent;
+      position: relative;
+    }
+    
+    /* Container with fixed position and hidden overflow */
+    .player-container {
+      position: absolute;
+      top: 89px;
+      right: 12px;
+      width: 450px;
+      height: 72px;
+      overflow: hidden;
+    }
+    
+    /* Card that slides within the container */
+    .player-card {
+      width: 100%;
+      height: 100%;
+      transition: transform 1s ease;
+      transform: translateY(100%); /* Start below the container */
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+      font-size: 2rem;
+      background-color: #2f472f;
+    }
+    
+    .player-card.visible {
+      transform: translateY(0); /* Move to normal position */
+      opacity: 1;
+    }
+    
+    .player-card.hidden {
+      transform: translateY(100%); /* Move below the container */
+      opacity: 0;
+      transition: transform 1s ease, opacity 0.3s ease 0.7s; /* Delay opacity until almost done sliding */
+    }
+    
+    .bg-stream-green {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- Container with fixed dimensions and hidden overflow -->
+  <div class="player-container">
+    <!-- Card that slides within the container -->
+    <div id="player2" class="player-card">
+      <div class="bg-stream-green p-3 w-full h-full">
+        <div class="font-blender text-white text-center" id="player2-name">Player 2</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Connect to Socket.IO server
+    const socket = io({
+      query: {
+        source: 'player2',
+        type: 'graphic'
+      }
+    });
+    console.log('Player 2 graphic connected to server');
+    
+    // DOM Elements
+    const playerCard = document.getElementById('player2');
+    const playerNameElement = document.getElementById('player2-name');
+    
+    // Player state
+    let playerState = {
+      visible: false,
+      name: 'Player 2'
+    };
+    
+    // Function to update player visibility
+    function updatePlayerVisibility(visible) {
+      if (playerState.visible !== visible) {
+        console.log(`Updating player 2 visibility to: ${visible}`);
+        
+        playerState.visible = visible;
+        
+        if (visible) {
+          playerCard.classList.add('visible');
+        } else {
+          playerCard.classList.remove('visible');
+        }
+      }
+    }
+    
+    // Function to update player name
+    function updatePlayerName(name) {
+      if (playerState.name !== name && name) {
+        console.log(`Updating player 2 name to: "${name}"`);
+        playerState.name = name;
+        playerNameElement.textContent = name;
+      }
+    }
+    
+    // Function to get player name from selected stream
+    function getPlayerNameFromStreams(streams, selectedStreams, slotIndex) {
+      if (!streams || !selectedStreams || !selectedStreams[slotIndex]) {
+        return null;
+      }
+      
+      const selectedStreamId = selectedStreams[slotIndex];
+      const stream = streams.find(s => s.id === selectedStreamId);
+      return stream ? stream.playerName : null;
+    }
+    
+    // Store current state for reference
+    let currentState = {
+      streams: [],
+      selectedStreams: []
+    };
+    
+    // Request initial state when connected
+    socket.on('connect', () => {
+      console.log('Connected to server, requesting initial state');
+      socket.emit('request_initial_state');
+    });
+    
+    // Initialize with current state
+    socket.on('initial_state', (state) => {
+      console.log('Received initial state:', state);
+      console.log('Streams:', state.streams);
+      console.log('Selected streams:', state.selectedStreams);
+      
+      // Store the current state
+      currentState.streams = state.streams || [];
+      currentState.selectedStreams = state.selectedStreams || [];
+      
+      console.log('Current state after update:', currentState);
+      
+      // Get player name from second selected stream (index 1)
+      const playerName = getPlayerNameFromStreams(state.streams, state.selectedStreams, 1);
+      console.log('Player name found:', playerName);
+      
+      if (playerName) {
+        updatePlayerName(playerName);
+        
+        // Wait 2 seconds before showing the player card on initial load
+        setTimeout(() => {
+          updatePlayerVisibility(true);
+        }, 2000);
+      } else {
+        console.log('No player name found, keeping default');
+        // Still show the card even with default name
+        setTimeout(() => {
+          updatePlayerVisibility(true);
+        }, 2000);
+      }
+    });
+    
+    // Listen for UPDATE_SELECTED_STREAM updates
+    socket.on('update', (updateData) => {
+      console.log('Received update:', updateData);
+      
+      if (updateData.type === 'UPDATE_SELECTED_STREAM') {
+        // Update our local selectedStreams state
+        if (updateData.data.slot >= 0 && updateData.data.slot < 3) {
+          currentState.selectedStreams[updateData.data.slot] = updateData.data.streamId;
+        }
+        
+        // If this affects player 2 (slot 1), update the display
+        if (updateData.data.slot === 1) {
+          const playerName = getPlayerNameFromStreams(currentState.streams, currentState.selectedStreams, 1);
+          if (playerName) {
+            updatePlayerName(playerName);
+          } else {
+            updatePlayerName('Player 2'); // Reset to default if no stream selected
+          }
+        }
+      } else if (updateData.type === 'ADD_STREAM' || updateData.type === 'UPDATE_STREAM') {
+        // Update our local streams state
+        if (updateData.type === 'ADD_STREAM') {
+          currentState.streams.push(updateData.data);
+        } else if (updateData.type === 'UPDATE_STREAM') {
+          const streamIndex = currentState.streams.findIndex(s => s.id === updateData.data.id);
+          if (streamIndex !== -1) {
+            currentState.streams[streamIndex] = updateData.data;
+          }
+        }
+        
+        // Check if the updated stream affects player 2
+        const playerName = getPlayerNameFromStreams(currentState.streams, currentState.selectedStreams, 1);
+        if (playerName) {
+          updatePlayerName(playerName);
+        }
+      } else if (updateData.type === 'REMOVE_STREAM') {
+        // Remove from our local streams state
+        currentState.streams = currentState.streams.filter(s => s.id !== updateData.data.id);
+        
+        // Check if this affects player 2
+        const playerName = getPlayerNameFromStreams(currentState.streams, currentState.selectedStreams, 1);
+        if (playerName) {
+          updatePlayerName(playerName);
+        } else {
+          updatePlayerName('Player 2'); // Reset to default if stream was removed
+        }
+      }
+    });
+    
+    // Listen for any state updates
+    socket.on('state_update', (state) => {
+      console.log('Received state update:', state);
+      
+      // Update our local state
+      currentState.streams = state.streams || [];
+      currentState.selectedStreams = state.selectedStreams || [];
+      
+      // Get player name from second selected stream (index 1)
+      const playerName = getPlayerNameFromStreams(state.streams, state.selectedStreams, 1);
+      if (playerName) {
+        updatePlayerName(playerName);
+      }
+    });
+    
+    // Listen for visibility toggle events
+    socket.on('toggle_visibility', (data) => {
+      console.log('Received toggle_visibility:', data);
+      
+      if (data.type === 'player' && data.id === 'player2') {
+        updatePlayerVisibility(data.visible);
+      }
+    });
+    
+    // Check connection status periodically
+    setInterval(() => {
+      console.log('Connection status check - Connected:', socket.connected);
+      if (socket.connected) {
+        // Request a ping from the server to verify two-way communication
+        socket.emit('ping_server', { timestamp: Date.now() });
+      } else {
+        console.warn('Socket disconnected, attempting to reconnect...');
+        socket.connect();
+      }
+    }, 5000);
+    
+    // Listen for ping response
+    socket.on('pong_client', (data) => {
+      console.log('Received pong from server:', data);
+    });
+    
+    // Socket connection events
+    socket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+    });
+    
+    socket.on('connect_error', (error) => {
+      console.log('Connection error:', error.message);
+    });
+  </script>
+</body>
+</html>

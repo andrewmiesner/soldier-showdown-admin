@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caster Trio</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link href="/admin/css/tailwind.css" rel="stylesheet">
+  <style>
+    body { 
+      margin: 0; 
+      padding: 0; 
+      overflow: hidden; 
+      background-color: transparent;
+      position: relative;
+    }
+    
+    /* Container with fixed position and hidden overflow */
+    .player-container-1 {
+      position: absolute;
+      top: 876px;
+      left: 61px;
+      width: 577px;
+      height: 67px;
+      overflow: hidden;
+    }
+    
+    .player-container-2 {
+      position: absolute;
+      top: 876px;
+      left: 678px;
+      width: 577px;
+      height: 67px;
+      overflow: hidden;
+    }
+    
+    .player-container-3 {
+      position: absolute;
+      top: 876px;
+      left: 1293px; /* Centered horizontally */
+      width: 572px;
+      height: 67px;
+      overflow: hidden;
+    }
+    
+    /* Card that slides within the container */
+    .player-card {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      transform: translateY(100%);
+      transition: transform 0.5s ease-out;
+    }
+    
+    .player-card.visible {
+      transform: translateY(0);
+    }
+
+    .player-card.visible .caster-handle {
+      transform: translateX(0);
+      transition-delay: 1s;
+    }
+
+    .bg-stream-green {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      height: 100%;
+    }
+
+    .caster-name { 
+      min-width: 300px;
+      width: 100%; 
+      height: 100%;
+      padding: 0 2rem;
+      color: white; 
+      font-size: 2.7rem;
+      justify-content: left;
+      display: flex;
+      align-items: center;
+      background-color: #2f472f;
+      z-index: 10;
+    }
+
+    .caster-handle { 
+      max-width: 250px;
+      width: 100%; 
+      height: 100%; 
+      color: black; 
+      background-color: white;
+      padding: 0 .50rem;
+      font-size: 1.7rem;
+      justify-content: center;
+      display: flex;
+      align-items: center;
+      transform: translateX(-150%);
+      transition: transform 0.5s ease-out;
+      z-index: 5;
+    }
+    
+    .caster-handle svg {
+      height: 1.5rem;
+      width: 1.5rem;
+      color: #333;
+      margin-right: 0.5rem;
+    }
+    
+  </style>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <!-- Container for Caster 1 -->
+  <div class="player-container-1">
+    <!-- Card that slides within the container -->
+    <div id="caster1" class="player-card">
+      <div class="bg-stream-green">
+        <div class="font-blender text-white text-center flex items-center caster-name" id="caster1-name">Caster 1</div>
+        <div class="font-blender text-white text-center bg-white flex items-center caster-handle" id="caster1-handle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-twitter-x" viewBox="0 0 16 16">
+          <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865z"/>
+          </svg>
+          <span id="caster1-handle-text">@caster1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container for Caster 2 -->
+  <div class="player-container-2">
+    <!-- Card that slides within the container -->
+    <div id="caster2" class="player-card">
+      <div class="bg-stream-green">
+        <div class="font-blender text-white text-center flex items-center caster-name" id="caster2-name">Caster 2</div>
+        <div class="font-blender text-white text-center bg-white flex items-center caster-handle" id="caster2-handle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-twitter-x" viewBox="0 0 16 16">
+          <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865z"/>
+          </svg>
+          <span id="caster2-handle-text">@caster2</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container for Caster 3 -->
+  <div class="player-container-3">
+    <!-- Card that slides within the container -->
+    <div id="caster3" class="player-card">
+      <div class="bg-stream-green">
+        <div class="font-blender text-white text-center flex items-center caster-name" id="caster3-name">Caster 3</div>
+        <div class="font-blender text-white text-center bg-white flex items-center caster-handle" id="caster3-handle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-twitter-x" viewBox="0 0 16 16">
+          <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865z"/>
+          </svg>
+          <span id="caster3-handle-text">@caster3</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Connect to Socket.IO server
+    const socket = io({
+      query: {
+        source: 'caster_trio',
+        type: 'graphic'
+      }
+    });
+    console.log('Caster trio graphic connected to server');
+    
+    // DOM Elements for Caster 1
+    const caster1Card = document.getElementById('caster1');
+    const caster1NameElement = document.getElementById('caster1-name');
+    const caster1HandleTextElement = document.getElementById('caster1-handle-text');
+    
+    // DOM Elements for Caster 2
+    const caster2Card = document.getElementById('caster2');
+    const caster2NameElement = document.getElementById('caster2-name');
+    const caster2HandleTextElement = document.getElementById('caster2-handle-text');
+    
+    // DOM Elements for Caster 3
+    const caster3Card = document.getElementById('caster3');
+    const caster3NameElement = document.getElementById('caster3-name');
+    const caster3HandleTextElement = document.getElementById('caster3-handle-text');
+    
+    // Caster states
+    let caster1State = {
+      visible: false,
+      name: 'Caster 1',
+      handle: '@caster1'
+    };
+    
+    let caster2State = {
+      visible: false,
+      name: 'Caster 2',
+      handle: '@caster2'
+    };
+    
+    let caster3State = {
+      visible: false,
+      name: 'Caster 3',
+      handle: '@caster3'
+    };
+    
+    // Function to update caster 1 information
+    function updateCaster1Info(name, handle) {
+      if (name && caster1State.name !== name) {
+        console.log(`Updating caster 1 name to: "${name}"`);
+        caster1State.name = name;
+        caster1NameElement.textContent = name;
+      }
+      
+      if (handle && caster1State.handle !== handle) {
+        console.log(`Updating caster 1 handle to: "${handle}"`);
+        caster1State.handle = handle;
+        caster1HandleTextElement.textContent = handle.startsWith('@') ? handle : `@${handle}`;
+      }
+    }
+    
+    // Function to update caster 2 information
+    function updateCaster2Info(name, handle) {
+      if (name && caster2State.name !== name) {
+        console.log(`Updating caster 2 name to: "${name}"`);
+        caster2State.name = name;
+        caster2NameElement.textContent = name;
+      }
+      
+      if (handle && caster2State.handle !== handle) {
+        console.log(`Updating caster 2 handle to: "${handle}"`);
+        caster2State.handle = handle;
+        caster2HandleTextElement.textContent = handle.startsWith('@') ? handle : `@${handle}`;
+      }
+    }
+    
+    // Function to update caster 3 information
+    function updateCaster3Info(name, handle) {
+      if (name && caster3State.name !== name) {
+        console.log(`Updating caster 3 name to: "${name}"`);
+        caster3State.name = name;
+        caster3NameElement.textContent = name;
+      }
+      
+      if (handle && caster3State.handle !== handle) {
+        console.log(`Updating caster 3 handle to: "${handle}"`);
+        caster3State.handle = handle;
+        caster3HandleTextElement.textContent = handle.startsWith('@') ? handle : `@${handle}`;
+      }
+    }
+    
+    // Function to animate cards in
+    function animateCardsIn() {
+      setTimeout(() => {
+        caster1Card.classList.add('visible');
+        caster2Card.classList.add('visible');
+        caster3Card.classList.add('visible');
+      }, 2000);
+    }
+    
+    // Initialize with current state
+    socket.on('initialState', (state) => {
+      console.log('Received initialState:', state);
+      
+      if (state.casters) {
+        // Caster 1 uses index 0
+        const caster1 = state.casters[0];
+        if (caster1) {
+          console.log('Found caster1 data:', caster1);
+          updateCaster1Info(caster1.name, caster1.handle);
+        }
+        
+        // Caster 2 uses index 1
+        const caster2 = state.casters[1];
+        if (caster2) {
+          console.log('Found caster2 data:', caster2);
+          updateCaster2Info(caster2.name, caster2.handle);
+        }
+        
+        // Caster 3 uses index 2
+        const caster3 = state.casters[2];
+        if (caster3) {
+          console.log('Found caster3 data:', caster3);
+          updateCaster3Info(caster3.name, caster3.handle);
+        }
+      }
+      
+      // Always animate in after receiving initial state
+      animateCardsIn();
+    });
+    
+    // Listen for the main update event that the server broadcasts
+    socket.on('update', (updateData) => {
+      console.log('Received update:', updateData);
+      
+      if (updateData.type === 'UPDATE_CASTER') {
+        console.log('Processing UPDATE_CASTER:', updateData.data);
+        
+        // The actual data structure from server is { id: 0, caster: { id: 0, name: 'ASHES', handle: 'THYASHES' } }
+        if (updateData.data && updateData.data.caster) {
+          if (updateData.data.id === 0) {
+            updateCaster1Info(updateData.data.caster.name, updateData.data.caster.handle);
+          } else if (updateData.data.id === 1) {
+            updateCaster2Info(updateData.data.caster.name, updateData.data.caster.handle);
+          } else if (updateData.data.id === 2) {
+            updateCaster3Info(updateData.data.caster.name, updateData.data.caster.handle);
+          }
+        }
+      }
+    });
+    
+    // Socket connection events
+    socket.on('connect', () => {
+      console.log('Socket connected');
+    });
+    
+    socket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+    });
+    
+    socket.on('connect_error', (error) => {
+      console.log('Connection error:', error.message);
+    });
+  </script>
+</body>
+</html>

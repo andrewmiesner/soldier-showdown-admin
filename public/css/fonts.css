@@ -1,0 +1,29 @@
+/* Blender Pro Font Family */
+@font-face {
+  font-family: 'Blender Pro';
+  src: url('/fonts/blender-pro-heavy.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Apply Blender Pro as the default font for all graphics */
+body {
+  font-family: 'Blender Pro', 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Blender Pro', 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.font-blender {
+  font-family: 'Blender Pro', 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.font-bold {
+  font-weight: 700;
+}

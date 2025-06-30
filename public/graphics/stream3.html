@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream 3</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    #stream-container {
+      width: 100%;
+      height: 100%;
+    }
+    #twitch-embed, #youtube-embed, #kick-embed {
+      width: 100%;
+      height: 100%;
+    }
+    .loading-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: Arial, sans-serif;
+      font-size: 24px;
+      color: white;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .no-stream-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: Arial, sans-serif;
+      font-size: 24px;
+      color: white;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="stream-container">
+    <div id="twitch-embed"></div>
+    <div id="youtube-embed"></div>
+    <div id="kick-embed"></div>
+    <div id="loading-message" class="loading-message">Loading...</div>
+    <div id="no-stream-message" class="no-stream-message" style="display: none;">No Stream Selected</div>
+  </div>
+
+  <script src="https://embed.twitch.tv/embed/v1.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io({ 
+      query: { 
+        source: 'stream3', 
+        type: 'graphic' 
+      } 
+    });
+    
+    console.log('Stream 3 graphic connected to server');
+    
+    const loadingMessage = document.getElementById('loading-message');
+    const noStreamMessage = document.getElementById('no-stream-message');
+    let currentEmbed = null;
+
+    // Store current state for reference
+    let currentState = {
+      streams: [],
+      selectedStreams: []
+    };
+
+    function clearAllEmbeds() {
+      if (currentEmbed) {
+        if (currentEmbed.destroy) currentEmbed.destroy();
+        currentEmbed = null;
+      }
+      
+      document.getElementById('twitch-embed').innerHTML = '';
+      document.getElementById('youtube-embed').innerHTML = '';
+      document.getElementById('kick-embed').innerHTML = '';
+      
+      document.getElementById('twitch-embed').style.display = 'none';
+      document.getElementById('youtube-embed').style.display = 'none';
+      document.getElementById('kick-embed').style.display = 'none';
+    }
+
+    function showNoStreamMessage() {
+      clearAllEmbeds();
+      loadingMessage.style.display = 'none';
+      noStreamMessage.style.display = 'block';
+    }
+
+    function hideMessages() {
+      loadingMessage.style.display = 'none';
+      noStreamMessage.style.display = 'none';
+    }
+
+    function loadStream(platform, channelId) {
+      if (!platform || !channelId) {
+        showNoStreamMessage();
+        return;
+      }
+
+      console.log(`Loading ${platform} stream: ${channelId}`);
+      
+      clearAllEmbeds();
+      loadingMessage.style.display = 'block';
+      noStreamMessage.style.display = 'none';
+
+      // Convert platform name to lowercase for consistency
+      const platformLower = platform.toLowerCase();
+
+      if (platformLower === 'twitch') {
+        document.getElementById('twitch-embed').style.display = 'block';
+        currentEmbed = new Twitch.Embed("twitch-embed", {
+          width: "100%",
+          height: "100%",
+          channel: channelId,
+          layout: "video",
+          autoplay: true,
+          parent: ["colss7.ddns.net", "localhost"]
+        });
+        currentEmbed.addEventListener(Twitch.Embed.VIDEO_READY, () => {
+          hideMessages();
+        });
+      } else if (platformLower === 'youtube') {
+        document.getElementById('youtube-embed').style.display = 'block';
+        currentEmbed = new YT.Player('youtube-embed', {
+          height: '100%',
+          width: '100%',
+          videoId: channelId,
+          playerVars: {
+            'autoplay': 1,
+            'controls': 0
+          },
+          events: {
+            'onReady': () => { hideMessages(); }
+          }
+        });
+      } else if (platformLower === 'kick') {
+        document.getElementById('kick-embed').style.display = 'block';
+        const kickIframe = document.createElement('iframe');
+        kickIframe.src = `https://player.kick.com/${channelId}`;
+        kickIframe.width = '100%';
+        kickIframe.height = '100%';
+        kickIframe.allowFullscreen = true;
+        document.getElementById('kick-embed').appendChild(kickIframe);
+        hideMessages();
+      } else {
+        console.error('Unknown platform:', platform);
+        showNoStreamMessage();
+      }
+    }
+
+    // Function to get stream data from selected stream slot
+    function getStreamFromSelectedSlot(streams, selectedStreams, slotIndex) {
+      if (!streams || !selectedStreams || !selectedStreams[slotIndex]) {
+        return null;
+      }
+      
+      const selectedStreamId = selectedStreams[slotIndex];
+      return streams.find(s => s.id === selectedStreamId);
+    }
+
+    // Request initial state when connected
+    socket.on('connect', () => {
+      console.log('Connected to server, requesting initial state');
+      socket.emit('request_initial_state');
+    });
+
+    socket.on('initial_state', (state) => {
+      console.log('Received initial state:', state);
+      console.log('Streams:', state.streams);
+      console.log('Selected streams:', state.selectedStreams);
+      
+      // Store the current state
+      currentState.streams = state.streams || [];
+      currentState.selectedStreams = state.selectedStreams || [];
+      
+      // Get stream data from third selected stream (index 2)
+      const stream = getStreamFromSelectedSlot(state.streams, state.selectedStreams, 2);
+      console.log('Stream found for slot 2:', stream);
+      
+      if (stream) {
+        loadStream(stream.platform, stream.channelId);
+      } else {
+        console.log('No stream selected for slot 2');
+        showNoStreamMessage();
+      }
+    });
+
+    // Listen for UPDATE_SELECTED_STREAM updates
+    socket.on('update', (updateData) => {
+      console.log('Received update:', updateData);
+      
+      if (updateData.type === 'UPDATE_SELECTED_STREAM') {
+        // Update our local selectedStreams state
+        if (updateData.data.slot >= 0 && updateData.data.slot < 3) {
+          currentState.selectedStreams[updateData.data.slot] = updateData.data.streamId;
+        }
+        
+        // If this affects stream 3 (slot 2), update the display
+        if (updateData.data.slot === 2) {
+          const stream = getStreamFromSelectedSlot(currentState.streams, currentState.selectedStreams, 2);
+          if (stream) {
+            loadStream(stream.platform, stream.channelId);
+          } else {
+            showNoStreamMessage();
+          }
+        }
+      } else if (updateData.type === 'ADD_STREAM' || updateData.type === 'UPDATE_STREAM') {
+        // Update our local streams state
+        if (updateData.type === 'ADD_STREAM') {
+          currentState.streams.push(updateData.data);
+        } else if (updateData.type === 'UPDATE_STREAM') {
+          const streamIndex = currentState.streams.findIndex(s => s.id === updateData.data.id);
+          if (streamIndex !== -1) {
+            currentState.streams[streamIndex] = updateData.data;
+          }
+        }
+        
+        // Check if the updated stream affects stream 3
+        const stream = getStreamFromSelectedSlot(currentState.streams, currentState.selectedStreams, 2);
+        if (stream && stream.id === updateData.data.id) {
+          loadStream(stream.platform, stream.channelId);
+        }
+      } else if (updateData.type === 'REMOVE_STREAM') {
+        // Remove from our local streams state
+        currentState.streams = currentState.streams.filter(s => s.id !== updateData.data.id);
+        
+        // Check if this affects stream 3
+        const stream = getStreamFromSelectedSlot(currentState.streams, currentState.selectedStreams, 2);
+        if (stream) {
+          loadStream(stream.platform, stream.channelId);
+        } else {
+          showNoStreamMessage();
+        }
+      }
+    });
+
+    // Listen for any state updates
+    socket.on('state_update', (state) => {
+      console.log('Received state update:', state);
+      
+      // Update our local state
+      currentState.streams = state.streams || [];
+      currentState.selectedStreams = state.selectedStreams || [];
+      
+      // Get stream data from third selected stream (index 2)
+      const stream = getStreamFromSelectedSlot(state.streams, state.selectedStreams, 2);
+      if (stream) {
+        loadStream(stream.platform, stream.channelId);
+      } else {
+        showNoStreamMessage();
+      }
+    });
+
+    // Socket connection events
+    socket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+    });
+    
+    socket.on('connect_error', (error) => {
+      console.log('Connection error:', error.message);
+    });
+
+    // Check connection status periodically
+    setInterval(() => {
+      console.log('Connection status check - Connected:', socket.connected);
+      if (socket.connected) {
+        socket.emit('ping_server', { timestamp: Date.now() });
+      } else {
+        console.warn('Socket disconnected, attempting to reconnect...');
+        socket.connect();
+      }
+    }, 5000);
+
+    // Listen for ping response
+    socket.on('pong_client', (data) => {
+      console.log('Received pong from server:', data);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link href="/admin/css/tailwind.css" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Blender Pro', 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: transparent;
+      color: white;
+    }
+    
+    .leaderboard-container {
+      position: absolute;
+      top: 50px;
+      right: 50px;
+      width: 800px;
+      overflow: hidden;
+    }
+    
+    .leaderboard-header {
+      padding: 15px 20px;
+      text-align: center;
+    }
+    
+    .leaderboard-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .leaderboard-body {
+      padding: 10px 0;
+    }
+    
+    .player-row {
+      display: flex;
+      align-items: center;
+      height: 95px;
+      font-size: 3.5rem;
+      margin: 25px;
+      transform: translateX(100%);
+      opacity: 0;
+      transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+    }
+    
+    .player-row.visible {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    
+    .player-position {
+      width: 60px;
+      font-weight: bold;
+      color: black;
+      background-color: #999999;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .player-name {
+      flex: 1;
+      padding-left: 2rem;
+      width: 500px;
+      background-color: black;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    
+    .player-score {
+      width: 160px;
+      font-weight: bold;
+      text-align: center;
+      background-color: white;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: black;
+    }
+    
+  </style>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="leaderboard-container">
+    <div id="leaderboard-body" class="leaderboard-body">
+      <!-- Player rows will be inserted here -->
+    </div>
+  </div>
+
+  <script>
+    const socket = io({
+      query: {
+        source: 'leaderboard',
+        type: 'graphic'
+      }
+    });
+    
+    console.log('Leaderboard graphic connected to server');
+    
+    // DOM Elements
+    const leaderboardBody = document.getElementById('leaderboard-body');
+    
+    // Store current state for reference
+    let currentState = {
+      leaderboard: []
+    };
+    
+    // Track if this is the initial load
+    let isInitialLoad = true;
+    
+    // Track current leaderboard data to avoid unnecessary re-renders
+    let currentLeaderboardData = [];
+    
+    // Request initial state when connected
+    socket.on('connect', () => {
+      console.log('Connected to server, requesting initial state');
+      socket.emit('request_initial_state');
+    });
+    
+    // Initialize with current state
+    socket.on('initial_state', (state) => {
+      console.log('Received initial state:', state);
+      console.log('Leaderboard data:', state.leaderboard);
+      
+      // Store the current state
+      currentState.leaderboard = state.leaderboard || [];
+      
+      if (state.leaderboard) {
+        renderLeaderboard(state.leaderboard);
+      }
+    });
+    
+    // Listen for updates
+    socket.on('update', (updateData) => {
+      console.log('Received update:', updateData);
+      
+      if (updateData.type === 'UPDATE_LEADERBOARD') {
+        // Update our local leaderboard state
+        currentState.leaderboard = updateData.data || [];
+        renderLeaderboard(currentState.leaderboard);
+      }
+    });
+    
+    // Listen for any state updates
+    socket.on('state_update', (state) => {
+      console.log('Received state update:', state);
+      
+      // Update our local state
+      currentState.leaderboard = state.leaderboard || [];
+      
+      if (state.leaderboard) {
+        renderLeaderboard(state.leaderboard);
+      }
+    });
+    
+    // Socket connection events
+    socket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+    });
+    
+    socket.on('connect_error', (error) => {
+      console.log('Connection error:', error.message);
+    });
+    
+    // Check connection status periodically
+    setInterval(() => {
+      console.log('Connection status check - Connected:', socket.connected);
+      if (socket.connected) {
+        socket.emit('ping_server', { timestamp: Date.now() });
+      } else {
+        console.warn('Socket disconnected, attempting to reconnect...');
+        socket.connect();
+      }
+    }, 5000);
+    
+    // Listen for ping response
+    socket.on('pong_client', (data) => {
+      console.log('Received pong from server:', data);
+    });
+    
+    // Render leaderboard with sorting and position generation
+    function renderLeaderboard(leaderboardData) {
+      // Check if the data has actually changed to avoid unnecessary re-renders
+      if (JSON.stringify(currentLeaderboardData) === JSON.stringify(leaderboardData)) {
+        console.log('Leaderboard data unchanged, skipping render');
+        return;
+      }
+      
+      // Update our current data reference
+      currentLeaderboardData = JSON.parse(JSON.stringify(leaderboardData));
+      
+      // Clear existing rows
+      leaderboardBody.innerHTML = '';
+      
+      // Filter out empty players and sort by score (highest first)
+      const sortedPlayers = leaderboardData
+        .filter(player => player.name && player.name.trim() !== '')
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8); // Limit to top 8 players
+      
+      console.log('Sorted players:', sortedPlayers);
+      
+      // Create rows with generated positions
+      sortedPlayers.forEach((player, index) => {
+        const position = index + 1; // Generate position 1-8
+        
+        const row = document.createElement('div');
+        row.className = 'player-row';
+        
+        row.innerHTML = `
+          <div class="player-position">${position}</div>
+          <div class="player-name">${player.name}</div>
+          <div class="player-score">${player.score}</div>
+        `;
+        
+        leaderboardBody.appendChild(row);
+        
+        // Animate in rows if this is the initial load
+        if (isInitialLoad) {
+          // Initial delay of 2 seconds for the first row, then 0.2 seconds between each row
+          const delay = 2000 + (index * 200);
+          
+          setTimeout(() => {
+            row.classList.add('visible');
+          }, delay);
+        } else {
+          // If not initial load, show immediately
+          row.classList.add('visible');
+        }
+      });
+      
+      // Set initial load to false after first render
+      isInitialLoad = false;
+    }
+  </script>
+</body>
+</html>
