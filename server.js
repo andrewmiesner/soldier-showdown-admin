@@ -1,5 +1,5 @@
 const express = require('express');
-const http = require('http');
+const http = require('https');
 const socketIo = require('socket.io');
 const path = require('path');
 const fs = require('fs').promises;
@@ -8,7 +8,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const port = 3000;
+const port = 443;
 const dataFilePath = path.join(__dirname, 'data.json');
 console.log('Data file path:', dataFilePath);
 
