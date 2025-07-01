@@ -16,7 +16,7 @@ const io = socketIo(server, {
     }
 });
 
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 3000;
 const dataFilePath = path.join(__dirname, 'data.json');
 console.log('Data file path:', dataFilePath);
 
@@ -80,6 +80,16 @@ async function saveData() {
 }
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        port: port,
+        env: process.env.NODE_ENV || 'development'
+    });
+});
 
 io.on('connection', (socket) => {
     log('A user connected');
@@ -199,8 +209,9 @@ io.on('connection', (socket) => {
 
 // Load data before starting the server
 loadData().then(() => {
-    server.listen(port, () => {
+    server.listen(port, '0.0.0.0', () => {
         console.log(`Soldier Showdown Admin server listening on port ${port}`);
+        console.log(`Server accessible at http://0.0.0.0:${port}`);
         console.log(`Using Cloudflare for SSL termination`);
     });
 });
