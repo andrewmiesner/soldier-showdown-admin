@@ -83,19 +83,31 @@ const handleUpdate = update => {
 const updateStreamsDisplay = () => {
     const streamsDiv = document.getElementById('streams');
     streamsDiv.innerHTML = store.getState().streams.map((stream, index) => `
-        <div class="bg-dark-600 p-3 rounded-lg flex justify-between items-center">
-            <div class="flex-1">
-                <div class="flex items-center space-x-3">
-                    <span class="font-semibold text-blue-300 text-lg">${stream.playerName}</span>
-                    <span class="px-2 py-1 text-xs font-medium rounded-full ${getPlatformBadgeClass(stream.platform)}">${stream.platform}</span>
+        <div class="bg-dark-700 border border-slate-600 rounded-lg p-4 flex justify-between items-center">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="font-semibold text-slate-100 text-lg">${stream.playerName}</span>
+                    <span class="px-2 py-1 rounded-full text-xs font-medium ${getPlatformBadgeClass(stream.platform)}">${stream.platform}</span>
                 </div>
-                <div class="mt-1 text-sm text-gray-400">
-                    <span class="font-mono">${stream.channelId}</span>
+                <div class="text-sm text-slate-400">
+                    Channel: <span class="text-slate-300 font-mono">${stream.channelId}</span>
                 </div>
             </div>
-            <button data-stream-id="${stream.id}" class="remove-stream bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors">Remove</button>
+            <div class="flex gap-2 ml-4">
+                <button data-stream-id="${stream.id}" data-platform="${stream.platform}" data-channel-id="${stream.channelId}" class="preview-stream bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors">Preview</button>
+                <button data-stream-id="${stream.id}" class="remove-stream bg-red-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors">Remove</button>
+            </div>
         </div>
     `).join('');
+
+    // Add event listeners to preview buttons
+    document.querySelectorAll('.preview-stream').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const platform = e.target.getAttribute('data-platform');
+            const channelId = e.target.getAttribute('data-channel-id');
+            previewStream(platform, channelId);
+        });
+    });
 
     // Add event listeners to remove buttons
     document.querySelectorAll('.remove-stream').forEach(button => {
@@ -189,21 +201,44 @@ const updateEntireLeaderboard = () => {
 };
 
 const updateLeaderboardPlayer = (index, name, score) => {
-    const updatedLeaderboard = store.getState().leaderboard.map((player, i) => 
-        i === index ? { ...player, name, score: parseInt(score) } : player
-    );
+    // Get current leaderboard state
+    const currentLeaderboard = [...store.getState().leaderboard];
+    
+    // Update the specific player
+    currentLeaderboard[index] = {
+        name: name || '',
+        score: parseInt(score) || 0
+    };
 
-    // Send the update to the server
+    // Send the entire updated leaderboard to the server
     socket.emit('update', { 
         type: 'UPDATE_LEADERBOARD', 
-        data: updatedLeaderboard 
+        data: currentLeaderboard 
     });
 
-    // Update local store
-    store.dispatch({
-        type: 'UPDATE_LEADERBOARD',
-        data: updatedLeaderboard
-    });
+    // Update local store with the full leaderboard
+    store.setState({ leaderboard: currentLeaderboard });
+};
+
+const previewStream = (platform, channelId) => {
+    let streamUrl = '';
+    
+    switch (platform.toLowerCase()) {
+        case 'twitch':
+            streamUrl = `https://www.twitch.tv/${channelId}`;
+            break;
+        case 'youtube':
+            streamUrl = `https://www.youtube.com/watch?v=${channelId}`;
+            break;
+        case 'kick':
+            streamUrl = `https://kick.com/${channelId}`;
+            break;
+        default:
+            alert('Unknown platform');
+            return;
+    }
+    
+    window.open(streamUrl, '_blank');
 };
 
 // Set up the store's reducer
@@ -357,14 +392,28 @@ function renderLeaderboard(leaderboard) {
                    value="${player.name}" 
                    placeholder="Player Name" 
                    class="flex-1 min-w-0 p-2 bg-dark-700 border border-slate-600 rounded text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
-                   onchange="updateLeaderboardPlayer(${index}, this.value, document.querySelector('#leaderboard .flex:nth-child(${index + 1}) input[type=number]').value)">
+                   data-player-index="${index}"
+                   data-field-type="name">
             <input type="number" 
                    value="${player.score}" 
                    placeholder="Score" 
                    class="w-20 min-w-0 p-2 bg-dark-700 border border-slate-600 rounded text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
-                   onchange="updateLeaderboardPlayer(${index}, document.querySelector('#leaderboard .flex:nth-child(${index + 1}) input[type=text]').value, this.value)">
+                   data-player-index="${index}"
+                   data-field-type="score">
         `;
         leaderboardDiv.appendChild(playerDiv);
+        
+        // Add event listeners to the inputs
+        const nameInput = playerDiv.querySelector('input[data-field-type="name"]');
+        const scoreInput = playerDiv.querySelector('input[data-field-type="score"]');
+        
+        nameInput.addEventListener('change', () => {
+            updateLeaderboardPlayer(index, nameInput.value, scoreInput.value);
+        });
+        
+        scoreInput.addEventListener('change', () => {
+            updateLeaderboardPlayer(index, nameInput.value, scoreInput.value);
+        });
     });
 }
 

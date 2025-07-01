@@ -11,6 +11,12 @@
       "playerName": "LVNDMARK",
       "platform": "Twitch",
       "channelId": "lvndmark"
+    },
+    {
+      "id": "e6724fc3-5343-4bd1-854c-07417b1592cb",
+      "playerName": "Fox News",
+      "platform": "YouTube",
+      "channelId": "G8CmJMam9ss"
     }
   ],
   "casters": [
@@ -32,8 +38,8 @@
   ],
   "leaderboard": [
     {
-      "name": "Player 1",
-      "score": 2222
+      "name": "aMies",
+      "score": 33
     },
     {
       "name": "Player 2",
@@ -68,6 +74,6 @@
   "selectedStreams": [
     "7beb5a2c-26df-49a8-89e2-1282e46a8f53",
     "7beb5a2c-26df-49a8-89e2-1282e46a8f53",
-    null
+    "a57ce7ea-6317-4a8a-81e7-07d998b388cd"
   ]
 }
