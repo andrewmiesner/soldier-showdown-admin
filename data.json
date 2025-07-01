@@ -17,12 +17,18 @@
       "playerName": "Fox News",
       "platform": "YouTube",
       "channelId": "G8CmJMam9ss"
+    },
+    {
+      "id": "f684f0b1-a0e2-4318-8b08-913f15dab31a",
+      "playerName": "Lofi",
+      "platform": "YouTube",
+      "channelId": "TtkFsfOP9QI"
     }
   ],
   "casters": [
     {
       "id": 0,
-      "name": "ASHES",
+      "name": "ASHES!!",
       "handle": "THYASHES"
     },
     {
@@ -39,7 +45,7 @@
   "leaderboard": [
     {
       "name": "aMies",
-      "score": 33
+      "score": 33333
     },
     {
       "name": "Player 2",
@@ -72,7 +78,7 @@
   ],
   "message": "STARTING SOON!!",
   "selectedStreams": [
-    "7beb5a2c-26df-49a8-89e2-1282e46a8f53",
+    "f684f0b1-a0e2-4318-8b08-913f15dab31a",
     "7beb5a2c-26df-49a8-89e2-1282e46a8f53",
     "a57ce7ea-6317-4a8a-81e7-07d998b388cd"
   ]
