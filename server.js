@@ -3,6 +3,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const fs = require('fs').promises;
+const auth = require('basic-auth');
+require('dotenv').config();
 
 const app = express();
 
@@ -81,6 +83,27 @@ async function saveData() {
     }
 }
 
+const authenticate = (req, res, next) => {
+    const credentials = auth(req);
+    
+    const validUsername = process.env.ADMIN_USERNAME;
+    const validPassword = process.env.ADMIN_PASSWORD;
+    
+    if (!credentials || credentials.name !== validUsername || credentials.pass !== validPassword) {
+        res.statusCode = 401;
+        res.setHeader('WWW-Authenticate', 'Basic realm="Admin Panel"');
+        res.end('Access denied');
+    } else {
+        next();
+    }
+};
+
+// Protect only the index.html file (admin panel)
+app.get('/', authenticate, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Keep graphics and other files unprotected
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
