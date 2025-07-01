@@ -139,10 +139,10 @@ io.on('connection', (socket) => {
                 }
                 break;
             case 'REMOVE_STREAM':
-                log(`Removing stream: ${data.id}`);
-                dataStore.streams = dataStore.streams.filter(s => s.id !== data.id);
+                log(`Removing stream: ${data}`);  // data is the streamId directly
+                dataStore.streams = dataStore.streams.filter(s => s.id !== data);
                 // Also remove this stream from selectedStreams if it's selected
-                dataStore.selectedStreams = dataStore.selectedStreams.map(id => id === data.id ? null : id);
+                dataStore.selectedStreams = dataStore.selectedStreams.map(id => id === data ? null : id);
                 break;
             case 'UPDATE_CASTER':
                 const { id, caster } = data;

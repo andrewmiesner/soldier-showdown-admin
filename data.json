@@ -1,36 +1,6 @@
 {
   "streams": [
     {
-      "id": "aed1fdad-5ab2-4d20-a94a-21d55ce0afe3",
-      "playerName": "Another",
-      "platform": "test",
-      "channelId": "tsstds"
-    },
-    {
-      "id": "e43ecdea-4e97-405b-9622-546fd0627535",
-      "playerName": "J. Shankles",
-      "platform": "rrrr",
-      "channelId": "434"
-    },
-    {
-      "id": "9c61aaaf-09aa-4d5a-bd07-3e8415abbeb2",
-      "playerName": "Test",
-      "platform": "YouTube",
-      "channelId": "11111"
-    },
-    {
-      "id": "af3743c5-f157-4e7e-b182-0cf369666995",
-      "playerName": "fggfffggfgf",
-      "platform": "Twitch",
-      "channelId": "ggfgfgf"
-    },
-    {
-      "id": "92986dd8-aa01-4a7d-b6ff-e20d3495914d",
-      "playerName": "Yay!",
-      "platform": "Twitch",
-      "channelId": "fffdfdfd"
-    },
-    {
       "id": "7beb5a2c-26df-49a8-89e2-1282e46a8f53",
       "playerName": "Summit1G",
       "platform": "Twitch",
