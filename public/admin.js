@@ -253,9 +253,6 @@ socket.on('update', (update) => {
 // Subscribe to store changes
 store.subscribe(updateDisplay);
 
-// Initial display update
-updateDisplay();
-
 // Action creators
 const addStream = () => {
     const playerName = document.getElementById('playerName').value.trim();
@@ -337,7 +334,10 @@ const init = () => {
     });
 };
 
-init();
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    updateDisplay();
+});
 
 function renderLeaderboard(leaderboard) {
     const leaderboardDiv = document.getElementById('leaderboard');
