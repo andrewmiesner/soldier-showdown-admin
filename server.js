@@ -11,10 +11,12 @@ const server = http.createServer(app);
 
 const io = socketIo(server, {
     cors: {
-        origin: "*",
+        origin: "https://node.amies.dev",
         methods: ["GET", "POST"]
     }
 });
+
+const TWITCH_CLIENT_ID = 'xxwbu2ve2d37t8c11h27abpprhn6bf';
 
 const port = process.env.PORT || 3000;
 const dataFilePath = path.join(__dirname, 'data.json');
@@ -80,6 +82,14 @@ async function saveData() {
 }
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "frame-ancestors 'self' https://embed.twitch.tv https://*.twitch.tv https://node.amies.dev"
+  );
+  next();
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {

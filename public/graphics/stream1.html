@@ -129,7 +129,7 @@
           channel: channelId,
           layout: "video",
           autoplay: true,
-          parent: ["colss7.ddns.net", "localhost"]
+          parent: ["node.amies.dev", "localhost"]
         });
         currentEmbed.addEventListener(Twitch.Embed.VIDEO_READY, () => {
           hideMessages();
@@ -142,10 +142,24 @@
           videoId: channelId,
           playerVars: {
             'autoplay': 1,
-            'controls': 0
+            'mute': 0,
+            'controls': 0,
+            'enablejsapi': 1,
+            'origin': window.location.origin,
+            'playsinline': 1
           },
           events: {
-            'onReady': () => { hideMessages(); }
+            'onReady': (event) => { 
+              hideMessages();
+              // Try to play the video
+              event.target.playVideo();
+            },
+            'onStateChange': (event) => {
+              // If the video is cued, try to play it
+              if (event.data === YT.PlayerState.CUED) {
+                event.target.playVideo();
+              }
+            }
           }
         });
       } else if (platformLower === 'kick') {

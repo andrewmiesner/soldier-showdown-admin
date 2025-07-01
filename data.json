@@ -52,7 +52,7 @@
   "casters": [
     {
       "id": 0,
-      "name": "!ASHES",
+      "name": "ASHES",
       "handle": "THYASHES"
     },
     {
@@ -100,7 +100,7 @@
       "score": 54
     }
   ],
-  "message": "STARTING SOON!",
+  "message": "STARTING SOON!!",
   "selectedStreams": [
     "b5d20df7-d083-459c-8df7-3a97ede0cf2f",
     "7beb5a2c-26df-49a8-89e2-1282e46a8f53",

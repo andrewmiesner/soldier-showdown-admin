@@ -135,27 +135,21 @@ const updateCastersDisplay = () => {
 };
 
 const updateLeaderboardDisplay = () => {
-    const leaderboardDiv = document.getElementById('leaderboard');
-    if (Array.isArray(store.getState().leaderboard)) {
-        leaderboardDiv.innerHTML = store.getState().leaderboard.map((player, index) => `
-            <div class="flex items-center space-x-2 mb-2">
-                <span class="text-gray-300 w-6">#${index + 1}</span>
-                <input type="text" id="leaderboardName${index}" value="${player.name || ''}" placeholder="Name" class="flex-grow p-1 border rounded bg-dark-500 text-gray-200">
-                <input type="number" id="leaderboardScore${index}" value="${player.score || 0}" placeholder="Score" class="w-20 p-1 border rounded bg-dark-500 text-gray-200">
-            </div>
-        `).join('');
+    const leaderboard = store.getState().leaderboard;
+    if (Array.isArray(leaderboard)) {
+        renderLeaderboard(leaderboard);
     } else {
-        console.error('Leaderboard is not an array:', store.getState().leaderboard);
+        console.error('Leaderboard is not an array:', leaderboard);
+        const leaderboardDiv = document.getElementById('leaderboard');
         leaderboardDiv.innerHTML = '<p>Error: Leaderboard data is invalid.</p>';
     }
-
-    // Add event listener to the update button
-    document.getElementById('updateLeaderboardButton').addEventListener('click', updateEntireLeaderboard);
 };
 
 const updateMessageDisplay = () => {
-    document.getElementById('message').textContent = store.getState().message || 'No message set';
-    document.getElementById('messageContent').value = store.getState().message || '';
+    const messageElement = document.getElementById('messageContent');
+    if (messageElement) {
+        messageElement.value = store.getState().message || '';
+    }
 };
 
 // Define the main update function
@@ -173,6 +167,24 @@ const updateEntireLeaderboard = () => {
         name: document.getElementById(`leaderboardName${index}`)?.value || '',
         score: parseInt(document.getElementById(`leaderboardScore${index}`)?.value) || 0
     }));
+
+    // Send the update to the server
+    socket.emit('update', { 
+        type: 'UPDATE_LEADERBOARD', 
+        data: updatedLeaderboard 
+    });
+
+    // Update local store
+    store.dispatch({
+        type: 'UPDATE_LEADERBOARD',
+        data: updatedLeaderboard
+    });
+};
+
+const updateLeaderboardPlayer = (index, name, score) => {
+    const updatedLeaderboard = store.getState().leaderboard.map((player, i) => 
+        i === index ? { ...player, name, score: parseInt(score) } : player
+    );
 
     // Send the update to the server
     socket.emit('update', { 
@@ -324,3 +336,27 @@ const init = () => {
 };
 
 init();
+
+function renderLeaderboard(leaderboard) {
+    const leaderboardDiv = document.getElementById('leaderboard');
+    leaderboardDiv.innerHTML = '';
+    
+    leaderboard.forEach((player, index) => {
+        const playerDiv = document.createElement('div');
+        playerDiv.className = 'flex gap-3 p-3 bg-dark-700 rounded-lg';
+        playerDiv.innerHTML = `
+            <div class="w-8 flex items-center justify-center text-slate-400 font-medium">${index + 1}</div>
+            <input type="text" 
+                   value="${player.name}" 
+                   placeholder="Player Name" 
+                   class="flex-1 min-w-0 p-2 bg-dark-700 border border-slate-600 rounded text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                   onchange="updateLeaderboardPlayer(${index}, this.value, document.querySelector('#leaderboard .flex:nth-child(${index + 1}) input[type=number]').value)">
+            <input type="number" 
+                   value="${player.score}" 
+                   placeholder="Score" 
+                   class="w-20 min-w-0 p-2 bg-dark-700 border border-slate-600 rounded text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                   onchange="updateLeaderboardPlayer(${index}, document.querySelector('#leaderboard .flex:nth-child(${index + 1}) input[type=text]').value, this.value)">
+        `;
+        leaderboardDiv.appendChild(playerDiv);
+    });
+}
