@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soldier Showdown Admin Panel</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-950 text-slate-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-400 mb-2">Soldier Showdown</h1>
+            <p class="text-slate-400">Admin Control Panel</p>
+        </div>
+        
+        <!-- Selected Streams Section -->
+        <div class="bg-dark-800 border border-slate-700 rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-blue-300">Selected Streams</h2>
+            <div class="flex flex-col lg:flex-row gap-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Stream 1</label>
+                    <select id="selectedStream0" class="update-selected-stream w-full p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-stream-slot="0">
+                        <option value="">Select stream...</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Stream 2</label>
+                    <select id="selectedStream1" class="update-selected-stream w-full p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-stream-slot="1">
+                        <option value="">Select stream...</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Stream 3</label>
+                    <select id="selectedStream2" class="update-selected-stream w-full p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-stream-slot="2">
+                        <option value="">Select stream...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content - Two Column Layout -->
+        <div class="flex flex-col xl:flex-row gap-6">
+            <!-- Left Column -->
+            <div class="flex-1">
+                <!-- Casters Section with Broadcast Message -->
+                <div class="bg-dark-800 border border-slate-700 rounded-xl shadow-lg p-6 flex flex-col h-full">
+                    <h2 class="text-xl font-semibold mb-4 text-blue-300">Casters</h2>
+                    <div id="casters" class="space-y-4 flex-1 flex flex-col justify-between mb-6">
+                        <div class="flex flex-col gap-3 p-4 bg-dark-700 rounded-lg">
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <input type="text" id="casterName0" placeholder="Caster Name" 
+                                       class="flex-1 min-w-0 p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <input type="text" id="casterHandle0" placeholder="@handle" 
+                                       class="w-full sm:w-32 min-w-0 p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            </div>
+                            <button data-caster-id="0" class="update-caster w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors" data-caster-slot="0">
+                                Update Caster 1
+                            </button>
+                        </div>
+                        <div class="flex flex-col gap-3 p-4 bg-dark-700 rounded-lg">
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <input type="text" id="casterName1" placeholder="Caster Name" 
+                                       class="flex-1 min-w-0 p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <input type="text" id="casterHandle1" placeholder="@handle" 
+                                       class="w-full sm:w-32 min-w-0 p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            </div>
+                            <button data-caster-id="1" class="update-caster w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors" data-caster-slot="1">
+                                Update Caster 2
+                            </button>
+                        </div>
+                        <div class="flex flex-col gap-3 p-4 bg-dark-700 rounded-lg">
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <input type="text" id="casterName2" placeholder="Caster Name" 
+                                       class="flex-1 min-w-0 p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <input type="text" id="casterHandle2" placeholder="@handle" 
+                                       class="w-full sm:w-32 min-w-0 p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            </div>
+                            <button data-caster-id="2" class="update-caster w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors" data-caster-slot="2">
+                                Update Caster 3
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Broadcast Message Section -->
+                    <div class="border-t border-slate-700 pt-6">
+                        <h3 class="text-lg font-semibold mb-4 text-blue-300">Broadcast Message</h3>
+                        <div class="flex gap-3">
+                            <input type="text" id="messageContent" placeholder="Enter message..." 
+                                   class="flex-1 p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <button id="updateMessageButton" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors">
+                                Update
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Leaderboard -->
+            <div class="xl:w-50">
+                <div class="bg-dark-800 border border-slate-700 rounded-xl shadow-lg p-6 h-full flex flex-col">
+                    <h2 class="text-xl font-semibold mb-4 text-blue-300">Leaderboard</h2>
+                    <div id="leaderboard" class="space-y-2 mb-4 w-full flex-1">
+                        <!-- Leaderboard entries will be dynamically inserted here -->
+                    </div>
+                    <button id="updateLeaderboardButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-colors mt-auto">
+                        Update Leaderboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stream Management Section - Full Width at Bottom -->
+        <div class="bg-dark-800 border border-slate-700 rounded-xl shadow-lg p-6 mt-6">
+            <h2 class="text-xl font-semibold mb-4 text-blue-300">Stream Management</h2>
+            <!-- Add Stream Form at Top -->
+            <div class="border-b border-slate-700 pb-4 mb-6">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="playerName" placeholder="Player Name" 
+                           class="flex-1 p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select id="platform" class="sm:w-32 p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Platform</option>
+                        <option value="Twitch">Twitch</option>
+                        <option value="YouTube">YouTube</option>
+                        <option value="Kick">Kick</option>
+                    </select>
+                    <input type="text" id="channelId" placeholder="Channel ID" 
+                           class="flex-1 p-3 bg-dark-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button id="addStreamButton" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                        Add
+                    </button>
+                </div>
+            </div>
+            <!-- Streams List -->
+            <div id="streams" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>

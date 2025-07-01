@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Players</title>
+  <link href="/admin/css/tailwind.css" rel="stylesheet">
+  <style>
+    body { 
+      margin: 0; 
+      padding: 0; 
+      overflow: hidden; 
+      background-color: #f0f0f0;
+    }
+    .player-card {
+      position: absolute;
+      transition: transform 0.5s ease-out, opacity 0.5s ease;
+      opacity: 0;
+    }
+    .player-card.visible {
+      opacity: 1;
+    }
+    .player-card.hidden {
+      opacity: 0;
+    }
+    #PC01 {
+      top: 100px;
+      left: 50px;
+    }
+    #PC02 {
+      top: 100px;
+      right: 50px;
+    }
+    #PC03 {
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  </style>
+</head>
+<body class="dev-mode">
+  <div id="PC01" class="player-card hidden">
+    <div class="bg-white p-3 rounded-lg shadow-lg">
+      <div class="font-bold text-2xl text-black" id="player-PC01-name">Player 1</div>
+    </div>
+  </div>
+  
+  <div id="PC02" class="player-card hidden">
+    <div class="bg-white p-3 rounded-lg shadow-lg">
+      <div class="font-bold text-2xl text-black" id="player-PC02-name">Player 2</div>
+    </div>
+  </div>
+  
+  <div id="PC03" class="player-card hidden">
+    <div class="bg-white p-3 rounded-lg shadow-lg">
+      <div class="font-bold text-2xl text-black" id="player-PC03-name">Player 3</div>
+    </div>
+  </div>
+
+  <!-- Dev mode controls -->
+  <div class="fixed top-4 right-4 bg-white p-3 rounded shadow-lg z-50">
+    <label class="flex items-center space-x-2">
+      <input type="checkbox" id="toggle-dev-mode" checked>
+      <span class="text-black">Dev Mode</span>
+    </label>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Connect to Socket.IO server
+    const socket = io();
+    console.log('Players graphics connected to server');
+    
+    // DOM Elements
+    const players = {
+      PC01: {
+        container: document.getElementById('PC01'),
+        nameElement: document.getElementById('player-PC01-name'),
+        visible: false
+      },
+      PC02: {
+        container: document.getElementById('PC02'),
+        nameElement: document.getElementById('player-PC02-name'),
+        visible: false
+      },
+      PC03: {
+        container: document.getElementById('PC03'),
+        nameElement: document.getElementById('player-PC03-name'),
+        visible: false
+      }
+    };
+    
+    // Dev mode toggle
+    const devModeToggle = document.getElementById('toggle-dev-mode');
+    devModeToggle.addEventListener('change', () => {
+      document.body.classList.toggle('dev-mode', devModeToggle.checked);
+      
+      // Apply visibility based on dev mode
+      applyVisibilityStates();
+    });
+    
+    // Apply visibility states based on current mode
+    function applyVisibilityStates() {
+      Object.entries(players).forEach(([id, player]) => {
+        if (devModeToggle.checked) {
+          // In dev mode, show all elements but maintain their classes
+          player.container.style.opacity = '1';
+        } else {
+          // In production mode, respect the visibility state
+          player.container.style.opacity = player.visible ? '1' : '0';
+        }
+      });
+    }
+    
+    // Initialize with current state
+    socket.on('initial_state', (state) => {
+      console.log('Received initial state:', state);
+      
+      if (state.players) {
+        state.players.forEach(player => {
+          if (players[player.id]) {
+            // Update player information
+            updatePlayer(player.id, {
+              name: player.name || `Player ${player.id}`
+            });
+          }
+        });
+      }
+    });
+
+    function updatePlayer(id, data) {
+      if (players[id]) {
+        if (data.name) {
+          players[id].nameElement.textContent = data.name;
+        }
+        // Additional properties can be updated here
+      }
+    }
+  </script>
+</body>
+</html>
