@@ -83,12 +83,17 @@ const handleUpdate = update => {
 const updateStreamsDisplay = () => {
     const streamsDiv = document.getElementById('streams');
     streamsDiv.innerHTML = store.getState().streams.map((stream, index) => `
-        <div class="bg-dark-600 p-2 rounded-lg flex justify-between items-center">
-            <div>
-                <span class="font-semibold text-blue-300">${stream.playerName}</span>
-                <span class="text-xs text-gray-400">(${stream.platform})</span>
+        <div class="bg-dark-600 p-3 rounded-lg flex justify-between items-center">
+            <div class="flex-1">
+                <div class="flex items-center space-x-3">
+                    <span class="font-semibold text-blue-300 text-lg">${stream.playerName}</span>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full ${getPlatformBadgeClass(stream.platform)}">${stream.platform}</span>
+                </div>
+                <div class="mt-1 text-sm text-gray-400">
+                    <span class="font-mono">${stream.channelId}</span>
+                </div>
             </div>
-            <button data-stream-id="${stream.id}" class="remove-stream bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">Remove</button>
+            <button data-stream-id="${stream.id}" class="remove-stream bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors">Remove</button>
         </div>
     `).join('');
 
@@ -362,3 +367,17 @@ function renderLeaderboard(leaderboard) {
         leaderboardDiv.appendChild(playerDiv);
     });
 }
+
+// Helper function to get platform-specific badge styling
+const getPlatformBadgeClass = (platform) => {
+    switch (platform.toLowerCase()) {
+        case 'twitch':
+            return 'bg-purple-600 text-white';
+        case 'youtube':
+            return 'bg-red-600 text-white';
+        case 'kick':
+            return 'bg-green-600 text-white';
+        default:
+            return 'bg-gray-600 text-white';
+    }
+};
