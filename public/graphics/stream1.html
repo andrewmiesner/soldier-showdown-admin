@@ -123,16 +123,20 @@
 
       if (platformLower === 'twitch') {
         document.getElementById('twitch-embed').style.display = 'block';
-        currentEmbed = new Twitch.Embed("twitch-embed", {
-          width: "100%",
-          height: "100%",
-          channel: channelId,
-          layout: "video",
-          autoplay: true,
-          parent: ["node.amies.dev", "localhost"]
+        currentEmbed = new Twitch.Player("twitch-embed", {
+            width: "100%",
+            height: "100%",
+            channel: channelId,
+            autoplay: true,
+            muted: false,
+            parent: ["colss7.ddns.net", "localhost", "node.amies.dev"]
         });
-        currentEmbed.addEventListener(Twitch.Embed.VIDEO_READY, () => {
-          hideMessages();
+        
+        currentEmbed.addEventListener(Twitch.Player.READY, () => {
+            hideMessages();
+            // Try to set volume
+            currentEmbed.setVolume(1.0);
+            currentEmbed.setMuted(false);
         });
       } else if (platformLower === 'youtube') {
         document.getElementById('youtube-embed').style.display = 'block';

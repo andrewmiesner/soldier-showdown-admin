@@ -86,7 +86,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "frame-ancestors 'self' https://embed.twitch.tv https://*.twitch.tv https://node.amies.dev"
+    "frame-ancestors 'self' https://embed.twitch.tv https://*.twitch.tv https://node.amies.dev; " +
+    "frame-src 'self' https://embed.twitch.tv https://*.twitch.tv https://player.twitch.tv; " +
+    "media-src 'self' https://*.twitch.tv https://*.ttvnw.net"
   );
   next();
 });
