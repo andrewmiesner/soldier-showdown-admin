@@ -387,7 +387,6 @@ function renderLeaderboard(leaderboard) {
         const playerDiv = document.createElement('div');
         playerDiv.className = 'flex gap-3 p-3 bg-dark-700 rounded-lg';
         playerDiv.innerHTML = `
-            <div class="w-8 flex items-center justify-center text-slate-400 font-medium">${index + 1}</div>
             <input type="text" 
                    value="${player.name}" 
                    placeholder="Player Name" 
@@ -397,7 +396,7 @@ function renderLeaderboard(leaderboard) {
             <input type="number" 
                    value="${player.score}" 
                    placeholder="Score" 
-                   class="w-20 min-w-0 p-2 bg-dark-700 border border-slate-600 rounded text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                   class="w-14 min-w-0 p-2 bg-dark-700 border border-slate-600 rounded text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
                    data-player-index="${index}"
                    data-field-type="score">
         `;
