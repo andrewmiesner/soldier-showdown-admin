@@ -145,6 +145,15 @@ const updateLeaderboardDisplay = () => {
     }
 };
 
+const updateMessageDisplay = () => {
+    const messageElement = document.getElementById('messageContent');
+    if (messageElement) {
+        messageElement.value = store.getState().message || '';
+    } else {
+        console.warn('Message element not found');
+    }
+};
+
 // Define the main update function
 const updateDisplay = () => {
     log('Updating display');
